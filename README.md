@@ -2,225 +2,181 @@
 
 ## Інформаційна система для управління стоматологічною клінікою
 
-A bachelor thesis project focused on designing and developing a web-oriented information system for dental clinic management and automation.
+This repository contains a static landing page for a bachelor thesis project. The site presents the concept, goals, and expected outcomes of the thesis project and is intended to be easy to review, host, and maintain.
 
----
+## Repository Purpose
 
-## Project Overview
+The repository is used for:
 
-This repository contains the academic landing page and documentation for the bachelor thesis project on dental clinic management information systems.
+- storing the thesis landing page source files;
+- supporting local preview and lightweight collaboration;
+- documenting deployment, update, backup, and restore procedures for a static web project;
+- providing simple automation scripts for development and operations tasks.
 
-**Thesis Title (English):**  
-Information System for Dental Clinic Management
+## Project Type
 
-**Thesis Title (Ukrainian):**  
-Інформаційна система для управління стоматологічною клінікою
+This is a static web project built with:
 
-### Project Description
+- HTML5
+- CSS3
+- JavaScript
+- images and other static assets
 
-A web-oriented information system designed to automate key operations in dental clinic management, including:
+Applicable infrastructure:
 
-- Patient records management
-- Electronic medical records (EMR)
-- Appointment scheduling and booking
-- Financial and payment tracking
-- Role-based access control (RBAC)
-- Business process support and workflow automation
+- Web server: yes
+- Application server: not required
+- Database: not required
+- Cache service: not required
+- Background workers: not required
 
----
+## Quick Start For Developers
 
-## Repository Structure
+### Prerequisites
 
-```
-/
-├── README.md                      # Project overview and setup guide
-├── LICENSE                        # MIT License
-├── .gitignore                     # Git ignore rules
-├── index.html                     # Landing page (main)
-├── robots.txt                     # SEO robots configuration
-├── sitemap.xml                    # XML sitemap for search engines
-├── site.webmanifest              # Web app manifest
-├── css/
-│   ├── normalize.css             # CSS reset/normalize
-│   └── styles.css                # Main stylesheet
-├── js/
-│   └── main.js                   # Minimal JavaScript
-├── images/
-│   ├── university-logo.png       # University branding
-│   ├── dental-clinic-hero.webp   # Hero image
-│   ├── favicon-16x16.png         # Favicon variants
-│   ├── favicon-32x32.png
-│   ├── apple-touch-icon.png
-│   └── android-chrome-192x192.png
-└── docs/
-    ├── requirements.md           # Landing page requirements
-    └── report-notes.md           # Lab report notes and milestones
-```
+Prepare a clean workstation with:
 
----
+- `Git`
+- a modern web browser such as Chrome, Edge, or Firefox
+- a code editor such as Visual Studio Code
+- optional: `Python 3` for the local development server
+- optional: Node.js with `http-server` installed globally for local preview if Python is unavailable
 
-## Thesis Content
-
-### Main Objectives
-
-1. Analyze the subject domain of dental clinic operations
-2. Design data structure and core system modules
-3. Implement patient records, appointment, and financial functions
-4. Ensure role-based access model and data security
-5. Prepare web interface for user interaction
-
-### Research Methodology
-
-- Subject domain analysis
-- System architecture design
-- Data structure modeling
-- Web interface development
-- Testing and usability evaluation
-
-### Expected Results
-
-- Centralized patient data management
-- Convenient appointment scheduling
-- Reduced documentation errors
-- Simplified financial accounting
-- Enhanced security and access control
-- Scalability and integration capabilities
-
----
-
-## Git Flow Strategy
-
-This project follows **Git Flow** (Vincent Driessen model) with the following configuration:
-
-- **main** – production/stable release branch
-- **develop** – integration and development branch
-- **feature/** – feature development branches
-- **release/** – release preparation branches
-
-### Development Phases
-
-1. **Phase 0** – Repository hygiene and documentation (Lab 1)
-2. **Phase 1** – Initial setup: HTML structure and base styling
-3. **Phase 2** – Accessibility and SEO optimization
-4. **Phase 3** – Content implementation
-5. **Phase 4** – Styling and responsive design
-6. **v1.0.0** – First release
-7. **v1.1.0** – Enhanced English version (v2)
-
----
-
-## Getting Started
-
-### Local Preview
-
-Since this is a static website, simply open `index.html` in your web browser:
+### Clone The Repository
 
 ```bash
-# Option 1: Direct file open
-open index.html
-
-# Option 2: Using a local HTTP server (Python 3)
-python -m http.server 8000
-# Then visit http://localhost:8000
-
-# Option 3: Using Node.js http-server
-npx http-server
+git clone https://github.com/GrandWanderer/-histesting.git histesting
+cd histesting
 ```
 
-### Building & Contribution
+### Open The Project Locally
 
-- The landing page is built with semantic HTML5, CSS3, and minimal JavaScript
-- No build system or external dependencies required
-- Code follows accessibility (WCAG 2.1) and SEO best practices
+You can inspect the project directly by opening `index.html` in a browser, but a local HTTP server is recommended for realistic testing of links and static assets.
 
----
+Linux or macOS:
 
-## GitHub Pages Deployment
-
-This project is prepared for deployment on GitHub Pages.
-
-**Deployment Configuration:**
-
-- Branch: `main`
-- Source folder: `/ (root)`
-
-**Deployment Steps:**
-
-1. Push all branches and tags to GitHub
-2. Go to repository Settings → Pages
-3. Select "Deploy from a branch"
-4. Choose `main` branch and `/ (root)` folder
-5. Click Save
-
-**Site URL Format:**
-
-```
-https://github.com/GrandWanderer/-histesting
-https://<username>.github.io/-histesting
+```bash
+chmod +x docs/scripts/run-dev.sh
+./docs/scripts/run-dev.sh
 ```
 
----
+Windows:
 
-## Repository Information
+```bat
+docs\scripts\run-dev.bat
+```
 
-- **Status:** Public repository
-- **Sensitive Data:** None stored
-- **License:** MIT
-- **Author:** Kovalenko Vadim O.
-- **Email:** kovalenko.vadim2004@gmail.com
-- **University:** Sumy State University
-- **Department:** Department of Computer Science
-- **Repository:** https://github.com/GrandWanderer/-histesting
+Default local address:
 
----
+```text
+http://localhost:8000
+```
 
-## Lab Assignment Alignment
+To stop the local server, press `Ctrl+C` in the terminal window where it is running.
 
-### LAB 1 – Repository Hygiene & Preparation
+## Required Software
 
-✓ Public repository  
-✓ Clean and minimal file structure  
-✓ .gitignore file included  
-✓ README.md with project description  
-✓ LICENSE file (MIT)  
-✓ No private or sensitive information  
-✓ Documented through meaningful commits
+Minimum recommended developer tools:
 
-### LAB 2 – Landing Page & Git Flow
+- `Git` for source control
+- a browser for visual testing
+- an editor for changing HTML, CSS, JS, and Markdown files
 
-✓ One-page landing website  
-✓ Git Flow implementation with meaningful branches  
-✓ Semantic HTML5 and accessibility (WCAG 2.1)  
-✓ SEO implementation (meta tags, Open Graph, structured data)  
-✓ Responsive design (mobile-first)  
-✓ GitHub Pages ready  
-✓ Annotated tags for milestones and releases
+Optional but useful:
 
----
+- `Python 3` for `python -m http.server`
+- `Node.js` and `http-server` as an alternative local server
 
-## Version History
+## Common Commands
 
-- **v1.0.0** – Initial release with Ukrainian and English bilingual support
-- **v1.1.0** – Enhanced English content presentation
+Start local preview on Linux or macOS:
 
----
+```bash
+./docs/scripts/run-dev.sh
+```
+
+Start local preview on Windows:
+
+```bat
+docs\scripts\run-dev.bat
+```
+
+Check repository status:
+
+```bash
+git status
+```
+
+Pull the latest changes:
+
+```bash
+git pull origin main
+```
+
+## Project Structure Overview
+
+```text
+.
+|-- index.html                 # Main landing page
+|-- css/                       # Stylesheets
+|-- js/                        # Frontend JavaScript
+|-- images/                    # Static images and icons
+|-- docs/
+|   |-- architecture.md        # Project structure and architecture
+|   |-- deployment.md          # Production deployment guide
+|   |-- update.md              # Update and rollback process
+|   |-- backup.md              # Backup and restore procedures
+|   |-- requirements.md        # Existing project requirements
+|   |-- report-notes.md        # Existing report notes
+|   `-- scripts/               # Local and operational helper scripts
+|-- Dockerfile                 # Optional Nginx container image
+|-- docker-compose.yml         # Optional local container run file
+`-- .github/workflows/         # Optional CI workflow
+```
+
+## Local Development Notes
+
+- No build system is required.
+- No package installation is required for the site itself.
+- No database setup is required.
+- No application server is required.
+- Changes to HTML, CSS, JS, or images can be previewed immediately in the browser after refresh.
+
+## Production Hosting Summary
+
+The primary documented production environment for this repository is:
+
+- Ubuntu Server 22.04 LTS
+- Nginx
+- Git
+
+Detailed instructions are available in:
+
+- `docs/deployment.md`
+- `docs/update.md`
+- `docs/backup.md`
+- `docs/architecture.md`
+
+## Documentation Map
+
+- `docs/architecture.md` explains the static-site architecture and components.
+- `docs/deployment.md` provides a step-by-step production deployment guide.
+- `docs/update.md` describes how to apply updates and roll back safely.
+- `docs/backup.md` describes what to back up and how to restore it.
+- `docs/scripts/` contains helper scripts for local preview, deployment, updates, backup, and restore.
+
+## Academic Context
+
+Project title in English:
+
+`Information System for Dental Clinic Management`
+
+Project title in Ukrainian:
+
+`Інформаційна система для управління стоматологічною клінікою`
+
+This repository represents the thesis presentation website, not the full backend implementation of the information system itself.
 
 ## License
 
-This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact & Submission
-
-**Student:** Kovalenko Vadim O.  
-**Email:** kovalenko.vadim2004@gmail.com  
-**University:** Sumy State University  
-**Faculty:** Department of Computer Science
-
-**GitHub Repository:** https://github.com/GrandWanderer/-histesting
-
----
-
-_Last Updated: March 2026_  
-_Lab Assignment: Bachelor Thesis – Information System Development_
+This project is licensed under the MIT License. See `LICENSE` for details.

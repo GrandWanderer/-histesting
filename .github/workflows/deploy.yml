@@ -1,0 +1,90 @@
+name: Static Site CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required static files
+        run: |
+          set -eu
+          test -f index.html
+          test -f css/styles.css
+          test -f js/main.js
+          test -d images
+          test -f robots.txt
+          test -f sitemap.xml
+          test -f site.webmanifest
+
+      - name: Prepare deployable artifact
+        run: |
+          set -eu
+          mkdir -p site-dist
+          rsync -av --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "docs" \
+            --exclude "site-dist" \
+            --exclude "Dockerfile" \
+            --exclude "docker-compose.yml" \
+            --exclude "README.md" \
+            --exclude "LICENSE" \
+            ./ site-dist/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site
+          path: site-dist
+
+  deploy-pages:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare Pages artifact
+        run: |
+          set -eu
+          mkdir -p site-dist
+          rsync -av --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "docs" \
+            --exclude "site-dist" \
+            --exclude "Dockerfile" \
+            --exclude "docker-compose.yml" \
+            --exclude "README.md" \
+            --exclude "LICENSE" \
+            ./ site-dist/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
