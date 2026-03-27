@@ -1,0 +1,26 @@
+# robots.txt for Bachelor Thesis Landing Page
+# Sumy State University – Department of Computer Science
+
+User-agent: *
+Allow: /
+Disallow: /docs/
+Disallow: /.git
+
+# Specific crawlers
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+# Sitemap location
+Sitemap: https://grandwanderer.github.io/-histesting/sitemap.xml
