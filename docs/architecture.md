@@ -36,6 +36,7 @@ flowchart TD
 | Ubuntu production server | Operating system for hosting the static site |
 | Nginx web server | Serves static files to end users |
 | Static files | `index.html`, stylesheets, scripts, images, manifest, robots, sitemap |
+| Generated code docs | `generated-docs/reference/` HTML reference output generated from JSDoc comments |
 | Logs | Nginx access and error logs used for diagnostics |
 | Backups | Archived copies of site files, Nginx config, logs, and optional SSL material |
 
@@ -84,6 +85,20 @@ The deployable application consists only of static content, for example:
 - `sitemap.xml`
 - `site.webmanifest`
 
+### Frontend Behavior Layer
+
+The landing page also includes a small documented browser behavior layer in `js/main.js`.
+
+It enhances the static markup with:
+
+- smooth in-page scrolling for navigation links;
+- keyboard navigation to the main content area;
+- lazy loading for deferred images;
+- navigation active-state tracking based on scroll position;
+- focus-state helpers for future forms.
+
+The JavaScript code is documented with JSDoc and exposed through a small public browser interface, `window.LandingPageApp`, to keep behavior explicit and maintainable.
+
 ### Logs
 
 Typical locations on Ubuntu:
@@ -113,8 +128,9 @@ The following infrastructure elements are not required for this repository:
 ## Data Flow Summary
 
 1. A developer updates the static files locally.
-2. The changes are committed and pushed to GitHub.
-3. Optional CI validates the repository and prepares an artifact.
-4. The static files are deployed to the Ubuntu server.
-5. Nginx serves the files directly to users.
-6. Logs and backups support troubleshooting and recovery.
+2. JSDoc can generate HTML reference documentation from `js/main.js`.
+3. The changes are committed and pushed to GitHub.
+4. Optional CI validates the repository, including code-quality and documentation checks, and prepares an artifact.
+5. The static files are deployed to the Ubuntu server.
+6. Nginx serves the files directly to users.
+7. Logs and backups support troubleshooting and recovery.

@@ -113,6 +113,24 @@ Pull the latest changes:
 git pull origin main
 ```
 
+Generate JavaScript reference documentation:
+
+```bash
+npm run docs:generate
+```
+
+Run documentation quality checks:
+
+```bash
+npm run docs:check
+```
+
+Create an archive of the generated documentation:
+
+```bash
+npm run docs:archive
+```
+
 ## Project Structure Overview
 
 ```text
@@ -137,10 +155,38 @@ git pull origin main
 ## Local Development Notes
 
 - No build system is required.
-- No package installation is required for the site itself.
+- No package installation is required for the site itself, but Node.js dependencies are used for linting, tests, and documentation tooling.
 - No database setup is required.
 - No application server is required.
 - Changes to HTML, CSS, JS, or images can be previewed immediately in the browser after refresh.
+
+## JavaScript Documentation Standard
+
+This project uses `JSDoc` for JavaScript source documentation.
+
+Contributors should document:
+
+- the public `window.LandingPageApp` interface in `js/main.js`;
+- any new public functions or reusable browser helpers;
+- function parameters, return values, and meaningful side effects;
+- non-obvious DOM assumptions, accessibility behavior, and usage notes;
+- examples when a function benefits from showing expected usage.
+
+Practical documentation rules for this repository:
+
+- use a JSDoc block directly above each public function;
+- include `@param` and `@returns` tags when a function accepts input or returns a value;
+- mention side effects when a function binds events, mutates the DOM, or updates CSS classes;
+- keep descriptions concise and specific to the landing page behavior;
+- update docs and examples whenever landing-page behavior changes.
+
+To regenerate the HTML reference documentation:
+
+```bash
+npm run docs:generate
+```
+
+Detailed instructions are available in `docs/generate_docs.md`.
 
 ## Production Hosting Summary
 
@@ -160,7 +206,9 @@ Detailed instructions are available in:
 ## Documentation Map
 
 - `docs/architecture.md` explains the static-site architecture and components.
+- `docs/code-documentation.md` explains the frontend behavior, documented public API, and code-level architectural decisions.
 - `docs/deployment.md` provides a step-by-step production deployment guide.
+- `docs/generate_docs.md` explains how to generate, validate, and archive JSDoc output.
 - `docs/update.md` describes how to apply updates and roll back safely.
 - `docs/backup.md` describes what to back up and how to restore it.
 - `docs/scripts/` contains helper scripts for local preview, deployment, updates, backup, and restore.

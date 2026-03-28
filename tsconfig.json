@@ -9,5 +9,5 @@
     "lib": ["DOM", "ES2022"]
   },
   "include": ["js/**/*.js"],
-  "exclude": ["node_modules", "images", "site-dist", "dist", "build"]
+  "exclude": ["node_modules", "images", "site-dist", "dist", "build", "generated-docs"]
 }

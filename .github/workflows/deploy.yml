@@ -31,6 +31,12 @@ jobs:
       - name: Run linting and type checking
         run: npm run check
 
+      - name: Generate code documentation
+        run: npm run docs:generate
+
+      - name: Archive generated code documentation
+        run: npm run docs:archive
+
       - name: Validate required static files
         run: |
           set -eu
@@ -53,6 +59,7 @@ jobs:
             --exclude "docs" \
             --exclude "node_modules" \
             --exclude "site-dist" \
+            --exclude "generated-docs" \
             --exclude "Dockerfile" \
             --exclude "docker-compose.yml" \
             --exclude "README.md" \
@@ -72,6 +79,12 @@ jobs:
         with:
           name: static-site
           path: site-dist
+
+      - name: Upload code documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-docs
+          path: generated-docs
 
   deploy-pages:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -95,6 +108,7 @@ jobs:
             --exclude "docs" \
             --exclude "node_modules" \
             --exclude "site-dist" \
+            --exclude "generated-docs" \
             --exclude "Dockerfile" \
             --exclude "docker-compose.yml" \
             --exclude "README.md" \

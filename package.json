@@ -3,15 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "lint:js": "eslint \"js/**/*.js\"",
+    "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.mjs\" \"docs/scripts/**/*.mjs\"",
     "lint:css": "stylelint \"css/**/*.css\"",
     "lint": "npm run lint:js && npm run lint:css",
+    "test": "node tests/main.test.mjs",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck",
+    "docs:generate": "jsdoc -c jsdoc.config.json",
+    "docs:check": "eslint \"js/**/*.js\"",
+    "docs:clean": "node docs/scripts/clean-docs.mjs",
+    "docs:archive": "node docs/scripts/archive-docs.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run docs:check",
     "hooks:install": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
+    "eslint-plugin-jsdoc": "^62.8.1",
+    "jsdoc": "^4.0.5",
     "stylelint": "^16.19.1",
     "stylelint-config-standard": "^38.0.0",
     "typescript": "^5.8.2"

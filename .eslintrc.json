@@ -5,18 +5,28 @@
     "es2022": true
   },
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:jsdoc/recommended"
+  ],
+  "plugins": [
+    "jsdoc"
   ],
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "script"
+  },
+  "settings": {
+    "jsdoc": {
+      "mode": "typescript"
+    }
   },
   "ignorePatterns": [
     "node_modules/",
     "images/",
     "site-dist/",
     "dist/",
-    "build/"
+    "build/",
+    "generated-docs/"
   ],
   "rules": {
     "no-unused-vars": [
@@ -47,6 +57,54 @@
     ],
     "no-var": "error",
     "prefer-const": "error",
-    "no-console": "warn"
-  }
+    "no-console": "warn",
+    "jsdoc/require-jsdoc": [
+      "warn",
+      {
+        "publicOnly": true,
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": true
+        }
+      }
+    ],
+    "jsdoc/require-description": "warn",
+    "jsdoc/require-param-description": "warn",
+    "jsdoc/require-returns-description": "warn",
+    "jsdoc/require-returns": [
+      "warn",
+      {
+        "checkGetters": false
+      }
+    ],
+    "jsdoc/require-example": "off",
+    "jsdoc/check-tag-names": "warn",
+    "jsdoc/check-alignment": "warn",
+    "jsdoc/tag-lines": "off",
+    "jsdoc/no-defaults": "off",
+    "jsdoc/no-undefined-types": "off",
+    "jsdoc/reject-any-type": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "tests/**/*.mjs",
+        "docs/scripts/**/*.mjs"
+      ],
+      "env": {
+        "node": true,
+        "es2022": true
+      },
+      "parserOptions": {
+        "sourceType": "module"
+      },
+      "extends": [
+        "eslint:recommended"
+      ],
+      "rules": {
+        "jsdoc/require-jsdoc": "off",
+        "no-console": "off"
+      }
+    }
+  ]
 }
