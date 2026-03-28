@@ -12,17 +12,20 @@
 document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', function(e) {
         const href = this.getAttribute('href');
-        if (href !== '#' && document.querySelector(href)) {
-            e.preventDefault();
+        if (typeof href === 'string' && href !== '#') {
             const target = document.querySelector(href);
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-                // Update focus for accessibility
-                target.focus();
+
+            if (!(target instanceof HTMLElement)) {
+                return;
             }
+
+            e.preventDefault();
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+            // Update focus for accessibility
+            target.focus();
         }
     });
 });
@@ -35,7 +38,8 @@ document.addEventListener('keydown', function(e) {
     // Skip to main content with Shift+Alt+M
     if (e.shiftKey && e.altKey && e.key === 'M') {
         const main = document.querySelector('main');
-        if (main) {
+
+        if (main instanceof HTMLElement) {
             main.focus();
             main.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -49,8 +53,9 @@ document.addEventListener('keydown', function(e) {
 if ('IntersectionObserver' in window) {
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && entry.target instanceof HTMLImageElement) {
                 const img = entry.target;
+
                 if (img.dataset.src) {
                     img.src = img.dataset.src;
                     img.removeAttribute('data-src');
@@ -63,12 +68,16 @@ if ('IntersectionObserver' in window) {
     });
 
     document.querySelectorAll('img[data-src]').forEach(img => {
-        imageObserver.observe(img);
+        if (img instanceof HTMLImageElement) {
+            imageObserver.observe(img);
+        }
     });
 } else {
     // Fallback for browsers without IntersectionObserver
     document.querySelectorAll('img[data-src]').forEach(img => {
-        img.src = img.dataset.src;
+        if (img instanceof HTMLImageElement && img.dataset.src) {
+            img.src = img.dataset.src;
+        }
     });
 }
 
@@ -83,17 +92,26 @@ function updateActiveNavLink() {
         let current = '';
         
         document.querySelectorAll('section[id]').forEach(section => {
+            if (!(section instanceof HTMLElement)) {
+                return;
+            }
+
             const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
             
-            if (pageYOffset >= sectionTop - 100) {
-                current = section.getAttribute('id');
+            if (window.scrollY >= sectionTop - 100) {
+                current = section.getAttribute('id') || '';
             }
         });
         
         navLinks.forEach(link => {
+            if (!(link instanceof HTMLAnchorElement)) {
+                return;
+            }
+
             link.classList.remove('active');
-            if (link.getAttribute('href').slice(1) === current) {
+            const href = link.getAttribute('href');
+
+            if (typeof href === 'string' && href.slice(1) === current) {
                 link.classList.add('active');
             }
         });
@@ -110,7 +128,9 @@ function initMobileMenu() {
     const navbar = document.querySelector('.navbar');
     const navMenu = document.querySelector('.nav-menu');
     
-    if (!navbar || !navMenu) return;
+    if (!navbar || !navMenu) {
+        return;
+    }
     
     // Check if menu needs mobile toggle (can be added later)
     const updateMenuDisplay = () => {
@@ -158,11 +178,3 @@ window.addEventListener('load', () => {
 });
 */
 
-// ========================================================================
-// Console Messages (development)
-// ========================================================================
-
-console.log('%cBachelor Thesis Landing Page', 'font-size: 16px; font-weight: bold; color: #2c3e50;');
-console.log('%cInformation System for Dental Clinic Management', 'font-size: 14px; color: #3498db;');
-console.log('%cStudent: Kovalenko Vadim O. | University: Sumy State University', 'font-size: 12px; color: #7f8c8d;');
-console.log('%cRepository: https://github.com/GrandWanderer/-histesting', 'font-size: 12px; color: #7f8c8d;');

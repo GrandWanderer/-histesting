@@ -19,6 +19,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting and type checking
+        run: npm run check
+
       - name: Validate required static files
         run: |
           set -eu
@@ -37,12 +49,22 @@ jobs:
           rsync -av --delete \
             --exclude ".git" \
             --exclude ".github" \
+            --exclude ".githooks" \
             --exclude "docs" \
+            --exclude "node_modules" \
             --exclude "site-dist" \
             --exclude "Dockerfile" \
             --exclude "docker-compose.yml" \
             --exclude "README.md" \
             --exclude "LICENSE" \
+            --exclude ".eslintignore" \
+            --exclude ".eslintrc.json" \
+            --exclude ".stylelintignore" \
+            --exclude ".stylelintrc.json" \
+            --exclude ".gitattributes" \
+            --exclude "package.json" \
+            --exclude "package-lock.json" \
+            --exclude "tsconfig.json" \
             ./ site-dist/
 
       - name: Upload build artifact
@@ -69,12 +91,22 @@ jobs:
           rsync -av --delete \
             --exclude ".git" \
             --exclude ".github" \
+            --exclude ".githooks" \
             --exclude "docs" \
+            --exclude "node_modules" \
             --exclude "site-dist" \
             --exclude "Dockerfile" \
             --exclude "docker-compose.yml" \
             --exclude "README.md" \
             --exclude "LICENSE" \
+            --exclude ".eslintignore" \
+            --exclude ".eslintrc.json" \
+            --exclude ".stylelintignore" \
+            --exclude ".stylelintrc.json" \
+            --exclude ".gitattributes" \
+            --exclude "package.json" \
+            --exclude "package-lock.json" \
+            --exclude "tsconfig.json" \
             ./ site-dist/
 
       - name: Configure GitHub Pages

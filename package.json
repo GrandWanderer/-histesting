@@ -1,0 +1,19 @@
+{
+  "name": "histesting",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint:js": "eslint \"js/**/*.js\"",
+    "lint:css": "stylelint \"css/**/*.css\"",
+    "lint": "npm run lint:js && npm run lint:css",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck",
+    "hooks:install": "git config core.hooksPath .githooks"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "stylelint": "^16.19.1",
+    "stylelint-config-standard": "^38.0.0",
+    "typescript": "^5.8.2"
+  }
+}
