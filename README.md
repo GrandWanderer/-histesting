@@ -131,6 +131,12 @@ Create an archive of the generated documentation:
 npm run docs:archive
 ```
 
+Run the full frontend quality and logging checks:
+
+```bash
+npm run check
+```
+
 ## Project Structure Overview
 
 ```text
@@ -189,6 +195,32 @@ npm run docs:generate
 
 Detailed instructions are available in `docs/generate_docs.md`.
 
+## Frontend Logging And Error Handling
+
+The site includes a browser-only logging and error-handling setup designed for static hosting.
+
+It provides:
+
+- configurable log levels without rebuilding the site;
+- console logging and `localStorage` log retention;
+- session and trace identifiers for frontend events;
+- global capture of uncaught errors and unhandled promise rejections;
+- localized user-facing error messages in Ukrainian and English;
+- a custom `404.html` page for static hosting.
+
+Implementation files:
+
+- `js/logger.js`
+- `js/error-handler.js`
+- `js/i18n-errors.js`
+- `404.html`
+
+Supporting documentation:
+
+- `docs/logging.md`
+- `docs/error-handling.md`
+- `docs/log-examples.md`
+
 ## Production Hosting Summary
 
 The primary documented production environment for this repository is:
@@ -210,7 +242,10 @@ Detailed instructions are available in:
 - `docs/code-documentation.md` explains the frontend behavior, documented public API, and code-level architectural decisions.
 - `docs/diagrams.md` contains the diagrams lab with theory, comparisons, and practical diagram models.
 - `docs/deployment.md` provides a step-by-step production deployment guide.
+- `docs/error-handling.md` explains browser-side error capture, IDs, localized messages, and the 404 strategy.
 - `docs/generate_docs.md` explains how to generate, validate, and archive JSDoc output.
+- `docs/log-examples.md` shows realistic structured log and error examples for the frontend.
+- `docs/logging.md` explains logging levels, handlers, retention, and runtime configuration.
 - `docs/update.md` describes how to apply updates and roll back safely.
 - `docs/backup.md` describes what to back up and how to restore it.
 - `docs/scripts/` contains helper scripts for local preview, deployment, updates, backup, and restore.

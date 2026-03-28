@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: logger.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: logger.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Browser logging utility for the static landing page.
+ * Supports configurable log levels, console output, and localStorage retention.
+ */
+
+'use strict';
+
+(function bootstrapLogger(globalObject) {
+    const runtimeWindow = /** @type {*} */ (globalObject);
+    const LOG_LEVEL_STORAGE_KEY = 'landingPage.logLevel';
+    const LOG_ENTRIES_STORAGE_KEY = 'landingPage.logs';
+    const SESSION_STORAGE_KEY = 'landingPage.sessionId';
+    const MAX_STORED_RECORDS = 150;
+    const DEFAULT_LEVEL_NAME = 'INFO';
+    const LEVELS = {
+        DEBUG: 10,
+        INFO: 20,
+        WARNING: 30,
+        ERROR: 40,
+        CRITICAL: 50
+    };
+    const LEVEL_ALIASES = {
+        debug: 'DEBUG',
+        info: 'INFO',
+        warning: 'WARNING',
+        warn: 'WARNING',
+        error: 'ERROR',
+        critical: 'CRITICAL'
+    };
+    const registeredHandlers = [];
+    let recentAction = null;
+
+    /**
+     * @typedef {object} LogContext
+     * @property {string} [url] Active page URL.
+     * @property {string} [hash] Current page hash.
+     * @property {string} [userAgent] Browser user agent string.
+     * @property {string} [language] Browser language.
+     */
+
+    /**
+     * @typedef {object} LogRecord
+     * @property {string} timestamp ISO timestamp of the log event.
+     * @property {string} level Severity level such as `INFO` or `ERROR`.
+     * @property {string} module Logical module that produced the event.
+     * @property {string} message Human-readable event description.
+     * @property {object} context Structured metadata for the event.
+     * @property {string} sessionId Browser session identifier.
+     * @property {string} traceId Operation identifier for related events.
+     * @property {string|null} errorId Unique error identifier when available.
+     */
+
+    function safeGetStorage(storageName) {
+        try {
+            return runtimeWindow[storageName];
+        } catch (_error) {
+            return null;
+        }
+    }
+
+    function createId(prefix) {
+        const randomPart = Math.random().toString(36).slice(2, 10);
+        return `${prefix}-${Date.now().toString(36)}-${randomPart}`;
+    }
+
+    function normalizeLevel(levelName) {
+        if (typeof levelName !== 'string') {
+            return null;
+        }
+
+        const normalizedName = LEVEL_ALIASES[levelName.trim().toLowerCase()];
+        return normalizedName || null;
+    }
+
+    function readPersistedLevel() {
+        const localStorageRef = safeGetStorage('localStorage');
+
+        if (!localStorageRef) {
+            return null;
+        }
+
+        const persistedLevel = localStorageRef.getItem(LOG_LEVEL_STORAGE_KEY);
+        return normalizeLevel(persistedLevel);
+    }
+
+    function resolveConfiguredLevel() {
+        const search = globalObject.location &amp;&amp; typeof globalObject.location.search === 'string'
+            ? globalObject.location.search
+            : '';
+        const searchParams = new URLSearchParams(search);
+        const queryLevel = normalizeLevel(searchParams.get('logLevel'));
+        const localStorageRef = safeGetStorage('localStorage');
+
+        if (queryLevel) {
+            if (localStorageRef) {
+                localStorageRef.setItem(LOG_LEVEL_STORAGE_KEY, queryLevel);
+            }
+            return queryLevel;
+        }
+
+        return readPersistedLevel() || DEFAULT_LEVEL_NAME;
+    }
+
+    function getSessionId() {
+        const sessionStorageRef = safeGetStorage('sessionStorage');
+
+        if (!sessionStorageRef) {
+            return createId('session');
+        }
+
+        const existingId = sessionStorageRef.getItem(SESSION_STORAGE_KEY);
+
+        if (existingId) {
+            return existingId;
+        }
+
+        const newId = createId('session');
+        sessionStorageRef.setItem(SESSION_STORAGE_KEY, newId);
+        return newId;
+    }
+
+    function getRuntimeContext() {
+        return {
+            url: globalObject.location &amp;&amp; globalObject.location.href ? globalObject.location.href : '',
+            hash: globalObject.location &amp;&amp; globalObject.location.hash ? globalObject.location.hash : '',
+            userAgent: globalObject.navigator &amp;&amp; globalObject.navigator.userAgent ? globalObject.navigator.userAgent : '',
+            language: globalObject.navigator &amp;&amp; globalObject.navigator.language ? globalObject.navigator.language : ''
+        };
+    }
+
+    function loadStoredRecords() {
+        const localStorageRef = safeGetStorage('localStorage');
+
+        if (!localStorageRef) {
+            return [];
+        }
+
+        try {
+            const serializedRecords = localStorageRef.getItem(LOG_ENTRIES_STORAGE_KEY);
+            return serializedRecords ? JSON.parse(serializedRecords) : [];
+        } catch (_error) {
+            return [];
+        }
+    }
+
+    function persistRecord(record) {
+        const localStorageRef = safeGetStorage('localStorage');
+
+        if (!localStorageRef) {
+            return;
+        }
+
+        const records = loadStoredRecords();
+        records.push(record);
+
+        if (records.length > MAX_STORED_RECORDS) {
+            records.splice(0, records.length - MAX_STORED_RECORDS);
+        }
+
+        localStorageRef.setItem(LOG_ENTRIES_STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function consoleHandler(record) {
+        const consoleRef = globalObject.console || console;
+        const messagePrefix = `[${record.level}] ${record.module}`;
+        const payload = {
+            sessionId: record.sessionId,
+            traceId: record.traceId,
+            errorId: record.errorId,
+            context: record.context
+        };
+
+        if (record.level === 'CRITICAL' || record.level === 'ERROR') {
+            consoleRef.error(messagePrefix, record.message, payload);
+            return;
+        }
+
+        if (record.level === 'WARNING') {
+            consoleRef.warn(messagePrefix, record.message, payload);
+            return;
+        }
+
+        if (record.level === 'DEBUG') {
+            consoleRef.debug(messagePrefix, record.message, payload);
+            return;
+        }
+
+        consoleRef.info(messagePrefix, record.message, payload);
+    }
+
+    function localStorageHandler(record) {
+        persistRecord(record);
+    }
+
+    /**
+     * Creates the public logger API used by the landing page.
+     *
+     * @returns {object} Logger methods and runtime metadata.
+     */
+    function createLogger() {
+        const configuredLevelName = resolveConfiguredLevel();
+        const configuredLevelWeight = LEVELS[configuredLevelName];
+        const sessionId = getSessionId();
+
+        registeredHandlers.push(consoleHandler);
+        registeredHandlers.push(localStorageHandler);
+
+        function shouldLog(levelName) {
+            return LEVELS[levelName] >= configuredLevelWeight;
+        }
+
+        /**
+         * Writes a structured log record to all active handlers.
+         *
+         * @param {string} levelName Severity level name.
+         * @param {string} moduleName Logical module or feature name.
+         * @param {string} message Event description.
+         * @param {object} [context] Additional structured metadata.
+         * @param {object} [meta] Optional trace and error identifiers.
+         * @returns {LogRecord|null} The created log record, or `null` when filtered out.
+         */
+        function log(levelName, moduleName, message, context, meta) {
+            if (!shouldLog(levelName)) {
+                return null;
+            }
+
+            const runtimeContext = getRuntimeContext();
+            const record = {
+                timestamp: new Date().toISOString(),
+                level: levelName,
+                module: moduleName,
+                message,
+                context: {
+                    ...runtimeContext,
+                    ...(context || {})
+                },
+                sessionId,
+                traceId: meta &amp;&amp; meta.traceId ? meta.traceId : createId('trace'),
+                errorId: meta &amp;&amp; meta.errorId ? meta.errorId : null
+            };
+
+            registeredHandlers.forEach(handler => {
+                try {
+                    handler(record);
+                } catch (_error) {
+                    // Handlers must not break the application runtime.
+                }
+            });
+
+            return record;
+        }
+
+        /**
+         * Stores the latest meaningful user action for later error context.
+         *
+         * @param {string} actionName Stable action identifier.
+         * @param {object} [context] Structured action metadata.
+         * @returns {object} The stored action descriptor.
+         */
+        function setRecentAction(actionName, context) {
+            recentAction = {
+                action: actionName,
+                context: context || {},
+                at: new Date().toISOString()
+            };
+            return recentAction;
+        }
+
+        /**
+         * Starts a traceable operation and stores it as the latest user action.
+         *
+         * @param {string} moduleName Logical module that owns the operation.
+         * @param {string} actionName Stable operation name.
+         * @param {object} [context] Structured action metadata.
+         * @returns {string} Trace identifier for related logs.
+         */
+        function startTrace(moduleName, actionName, context) {
+            const traceId = createId('trace');
+            setRecentAction(actionName, context);
+            log('DEBUG', moduleName, `Trace started: ${actionName}`, context, { traceId });
+            return traceId;
+        }
+
+        function registerHandler(handler) {
+            if (typeof handler === 'function') {
+                registeredHandlers.push(handler);
+            }
+        }
+
+        function clearStoredLogs() {
+            const localStorageRef = safeGetStorage('localStorage');
+
+            if (localStorageRef) {
+                localStorageRef.removeItem(LOG_ENTRIES_STORAGE_KEY);
+            }
+        }
+
+        function exportLogs() {
+            return JSON.stringify(loadStoredRecords(), null, 2);
+        }
+
+        return {
+            LEVELS,
+            sessionId,
+            getConfiguredLevel: () => configuredLevelName,
+            getRecentAction: () => recentAction,
+            getStoredLogs: loadStoredRecords,
+            clearStoredLogs,
+            exportLogs,
+            registerHandler,
+            setRecentAction,
+            startTrace,
+            log,
+            debug: (moduleName, message, context, meta) => log('DEBUG', moduleName, message, context, meta),
+            info: (moduleName, message, context, meta) => log('INFO', moduleName, message, context, meta),
+            warning: (moduleName, message, context, meta) => log('WARNING', moduleName, message, context, meta),
+            error: (moduleName, message, context, meta) => log('ERROR', moduleName, message, context, meta),
+            critical: (moduleName, message, context, meta) => log('CRITICAL', moduleName, message, context, meta)
+        };
+    }
+
+    runtimeWindow.LandingPageLogger = createLogger();
+    runtimeWindow.LandingPageLogger.info('logger', 'Logger initialized', {
+        configuredLevel: runtimeWindow.LandingPageLogger.getConfiguredLevel(),
+        retentionLimit: MAX_STORED_RECORDS
+    });
+}(window));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a>
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -7,8 +7,36 @@
 'use strict';
 
 (function bootstrapLandingPage(globalObject) {
+    const runtimeWindow = /** @type {*} */ (globalObject);
     const documentRef = globalObject.document;
     const windowRef = globalObject;
+    const logger = runtimeWindow.LandingPageLogger || createNoopLogger();
+    const errorHandler = runtimeWindow.LandingPageErrorHandler || createNoopErrorHandler();
+
+    function createNoopLogger() {
+        const noopTraceId = 'trace-disabled';
+
+        return {
+            sessionId: 'session-disabled',
+            getConfiguredLevel: () => 'INFO',
+            getRecentAction: () => null,
+            setRecentAction: () => null,
+            startTrace: () => noopTraceId,
+            debug: () => null,
+            info: () => null,
+            warning: () => null,
+            error: () => null,
+            critical: () => null
+        };
+    }
+
+    function createNoopErrorHandler() {
+        return {
+            installGlobalHandlers: () => null,
+            reportActionFailure: () => null,
+            reportError: () => null
+        };
+    }
 
     /**
      * Runtime dependencies used by the landing page behavior layer.
@@ -142,7 +170,13 @@
          * window.LandingPageApp.bindSmoothScrolling();
          */
         function bindSmoothScrolling() {
-            activeDocument.querySelectorAll('a[href^="#"]').forEach(link => {
+            const hashLinks = activeDocument.querySelectorAll('a[href^="#"]');
+
+            logger.debug('main.navigation', 'Binding smooth scrolling links', {
+                count: hashLinks.length
+            });
+
+            hashLinks.forEach(link => {
                 link.addEventListener('click', event => {
                     const currentLink = event.currentTarget;
 
@@ -150,9 +184,20 @@
                         return;
                     }
 
-                    const target = resolveHashTarget(activeDocument, currentLink.getAttribute('href') || '');
+                    const href = currentLink.getAttribute('href') || '';
+                    const traceId = logger.startTrace('main.navigation', 'anchor.click', {
+                        href
+                    });
+                    const target = resolveHashTarget(activeDocument, href);
 
                     if (!target) {
+                        logger.warning('main.navigation', 'Navigation target was not found', {
+                            href
+                        }, { traceId });
+                        errorHandler.reportActionFailure('actionFailed', {
+                            href,
+                            reason: 'missing-section'
+                        });
                         return;
                     }
 
@@ -162,6 +207,10 @@
                         block: 'start'
                     });
                     focusSection(target);
+                    logger.info('main.navigation', 'Anchor navigation completed', {
+                        href,
+                        targetId: target.id || ''
+                    }, { traceId });
                 });
             });
         }
@@ -176,14 +225,24 @@
          * window.LandingPageApp.bindKeyboardNavigation();
          */
         function bindKeyboardNavigation() {
+            logger.debug('main.keyboard', 'Binding keyboard navigation shortcut');
+
             activeDocument.addEventListener('keydown', event => {
                 if (!(event.shiftKey && event.altKey && event.key.toLowerCase() === 'm')) {
                     return;
                 }
 
+                const traceId = logger.startTrace('main.keyboard', 'shortcut.focus-main', {
+                    key: event.key
+                });
                 const main = activeDocument.querySelector('main');
 
                 if (!(main instanceof HTMLElement)) {
+                    logger.error('main.keyboard', 'Main element is missing for keyboard shortcut', {}, { traceId });
+                    errorHandler.reportActionFailure('actionFailed', {
+                        shortcut: 'Shift+Alt+M',
+                        reason: 'missing-main-element'
+                    });
                     return;
                 }
 
@@ -192,6 +251,7 @@
                     behavior: 'smooth',
                     block: 'start'
                 });
+                logger.info('main.keyboard', 'Keyboard shortcut moved focus to main content', {}, { traceId });
             });
         }
 
@@ -207,11 +267,35 @@
         function initLazyLoading() {
             const deferredImages = activeDocument.querySelectorAll('img[data-src]');
 
+            logger.debug('main.media', 'Initializing lazy loading', {
+                deferredImages: deferredImages.length
+            });
+
             if (!('IntersectionObserver' in activeWindow)) {
                 deferredImages.forEach(image => {
                     if (image instanceof HTMLImageElement) {
+                        image.addEventListener('error', () => {
+                            const traceId = logger.startTrace('main.media', 'image.load-fallback-error', {
+                                src: image.dataset.src || image.src
+                            });
+
+                            errorHandler.reportError(null, {
+                                category: 'resourceLoadError',
+                                context: {
+                                    imageSrc: image.dataset.src || image.src,
+                                    mode: 'fallback'
+                                },
+                                logMessage: 'Fallback image loading failed',
+                                traceId
+                            });
+                        });
+
                         loadDeferredImage(image);
                     }
+                });
+
+                logger.warning('main.media', 'Lazy loading fallback activated', {
+                    reason: 'IntersectionObserver unavailable'
                 });
                 return;
             }
@@ -219,8 +303,28 @@
             const observer = new IntersectionObserver((entries, currentObserver) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting && entry.target instanceof HTMLImageElement) {
-                        loadDeferredImage(entry.target);
-                        currentObserver.unobserve(entry.target);
+                        const image = entry.target;
+                        const traceId = logger.startTrace('main.media', 'image.lazy-load', {
+                            src: image.dataset.src || image.src
+                        });
+
+                        image.addEventListener('error', () => {
+                            errorHandler.reportError(null, {
+                                category: 'resourceLoadError',
+                                context: {
+                                    imageSrc: image.currentSrc || image.src,
+                                    mode: 'intersection-observer'
+                                },
+                                logMessage: 'Deferred image failed to load',
+                                traceId
+                            });
+                        }, { once: true });
+
+                        loadDeferredImage(image);
+                        currentObserver.unobserve(image);
+                        logger.debug('main.media', 'Deferred image loaded', {
+                            src: image.currentSrc || image.src
+                        }, { traceId });
                     }
                 });
             }, {
@@ -251,6 +355,14 @@
             const sections = Array.from(activeDocument.querySelectorAll('section[id]')).filter(section => {
                 return section instanceof HTMLElement;
             });
+            let lastSectionId = '';
+
+            if (!navLinks.length || !sections.length) {
+                logger.warning('main.navigation', 'Navigation state tracking has missing DOM dependencies', {
+                    navLinks: navLinks.length,
+                    sections: sections.length
+                });
+            }
 
             const syncActiveLink = () => {
                 const currentSectionId = findCurrentSectionId(sections, activeWindow.scrollY);
@@ -263,6 +375,13 @@
                     const isActive = (link.getAttribute('href') || '').slice(1) === currentSectionId;
                     link.classList.toggle('active', isActive);
                 });
+
+                if (currentSectionId && currentSectionId !== lastSectionId) {
+                    lastSectionId = currentSectionId;
+                    logger.debug('main.navigation', 'Active section changed', {
+                        sectionId: currentSectionId
+                    });
+                }
             };
 
             activeWindow.addEventListener('scroll', syncActiveLink);
@@ -281,6 +400,7 @@
             const navMenu = activeDocument.querySelector('.nav-menu');
 
             if (!(navbar instanceof HTMLElement) || !(navMenu instanceof HTMLElement)) {
+                logger.warning('main.layout', 'Mobile navigation hook skipped due to missing DOM elements');
                 return;
             }
 
@@ -295,6 +415,9 @@
 
             activeWindow.addEventListener('resize', updateMenuDisplay);
             updateMenuDisplay();
+            logger.debug('main.layout', 'Mobile navigation hook initialized', {
+                mobileReady: navMenu.dataset.mobileReady
+            });
         }
 
         /**
@@ -306,7 +429,13 @@
          * window.LandingPageApp.bindFormFocusStates();
          */
         function bindFormFocusStates() {
-            activeDocument.querySelectorAll('input, textarea, select').forEach(input => {
+            const formControls = activeDocument.querySelectorAll('input, textarea, select');
+
+            logger.debug('main.forms', 'Binding focus state helpers', {
+                controls: formControls.length
+            });
+
+            formControls.forEach(input => {
                 if (!(input instanceof HTMLElement)) {
                     return;
                 }
@@ -330,12 +459,18 @@
          * window.LandingPageApp.init();
          */
         function init() {
+            logger.info('main', 'Landing page application startup', {
+                configuredLogLevel: logger.getConfiguredLevel(),
+                sessionId: logger.sessionId
+            });
+            errorHandler.installGlobalHandlers();
             bindSmoothScrolling();
             bindKeyboardNavigation();
             initLazyLoading();
             updateActiveNavLink();
             initMobileMenu();
             bindFormFocusStates();
+            logger.info('main', 'Landing page modules initialized');
         }
 
         return {

@@ -131,6 +131,9 @@ cd histesting
 <p>Create an archive of the generated documentation:</p>
 <pre class="prettyprint source lang-bash"><code>npm run docs:archive
 </code></pre>
+<p>Run the full frontend quality and logging checks:</p>
+<pre class="prettyprint source lang-bash"><code>npm run check
+</code></pre>
 <h2>Project Structure Overview</h2>
 <pre class="prettyprint source lang-text"><code>.
 |-- index.html                 # Main landing page
@@ -139,6 +142,7 @@ cd histesting
 |-- images/                    # Static images and icons
 |-- docs/
 |   |-- architecture.md        # Project structure and architecture
+|   |-- diagrams.md            # Diagram analysis lab report
 |   |-- deployment.md          # Production deployment guide
 |   |-- update.md              # Update and rollback process
 |   |-- backup.md              # Backup and restore procedures
@@ -179,6 +183,30 @@ cd histesting
 <pre class="prettyprint source lang-bash"><code>npm run docs:generate
 </code></pre>
 <p>Detailed instructions are available in <code>docs/generate_docs.md</code>.</p>
+<h2>Frontend Logging And Error Handling</h2>
+<p>The site includes a browser-only logging and error-handling setup designed for static hosting.</p>
+<p>It provides:</p>
+<ul>
+<li>configurable log levels without rebuilding the site;</li>
+<li>console logging and <code>localStorage</code> log retention;</li>
+<li>session and trace identifiers for frontend events;</li>
+<li>global capture of uncaught errors and unhandled promise rejections;</li>
+<li>localized user-facing error messages in Ukrainian and English;</li>
+<li>a custom <code>404.html</code> page for static hosting.</li>
+</ul>
+<p>Implementation files:</p>
+<ul>
+<li><code>js/logger.js</code></li>
+<li><code>js/error-handler.js</code></li>
+<li><code>js/i18n-errors.js</code></li>
+<li><code>404.html</code></li>
+</ul>
+<p>Supporting documentation:</p>
+<ul>
+<li><code>docs/logging.md</code></li>
+<li><code>docs/error-handling.md</code></li>
+<li><code>docs/log-examples.md</code></li>
+</ul>
 <h2>Production Hosting Summary</h2>
 <p>The primary documented production environment for this repository is:</p>
 <ul>
@@ -197,8 +225,12 @@ cd histesting
 <ul>
 <li><code>docs/architecture.md</code> explains the static-site architecture and components.</li>
 <li><code>docs/code-documentation.md</code> explains the frontend behavior, documented public API, and code-level architectural decisions.</li>
+<li><code>docs/diagrams.md</code> contains the diagrams lab with theory, comparisons, and practical diagram models.</li>
 <li><code>docs/deployment.md</code> provides a step-by-step production deployment guide.</li>
+<li><code>docs/error-handling.md</code> explains browser-side error capture, IDs, localized messages, and the 404 strategy.</li>
 <li><code>docs/generate_docs.md</code> explains how to generate, validate, and archive JSDoc output.</li>
+<li><code>docs/log-examples.md</code> shows realistic structured log and error examples for the frontend.</li>
+<li><code>docs/logging.md</code> explains logging levels, handlers, retention, and runtime configuration.</li>
 <li><code>docs/update.md</code> describes how to apply updates and roll back safely.</li>
 <li><code>docs/backup.md</code> describes what to back up and how to restore it.</li>
 <li><code>docs/scripts/</code> contains helper scripts for local preview, deployment, updates, backup, and restore.</li>
@@ -214,6 +246,286 @@ cd histesting
     </section>
 
 
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>error-handler.js</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>Global browser error handling and user-facing fallback UI.</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="error-handler.js.html">error-handler.js</a>, <a href="error-handler.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>i18n-errors.js</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>Localized error message catalog for the static landing page.</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="i18n-errors.js.html">i18n-errors.js</a>, <a href="i18n-errors.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>logger.js</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description"><p>Browser logging utility for the static landing page.
+Supports configurable log levels, console output, and localStorage retention.</p></div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="logger.js.html">logger.js</a>, <a href="logger.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 

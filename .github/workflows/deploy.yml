@@ -41,8 +41,12 @@ jobs:
         run: |
           set -eu
           test -f index.html
+          test -f 404.html
           test -f css/styles.css
           test -f js/main.js
+          test -f js/logger.js
+          test -f js/error-handler.js
+          test -f js/i18n-errors.js
           test -d images
           test -f robots.txt
           test -f sitemap.xml

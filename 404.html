@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 | Information System for Dental Clinic Management</title>
+    <meta name="robots" content="noindex, follow">
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ecf0f1 100%);
+        }
+
+        .not-found-card {
+            width: min(680px, 100%);
+            padding: 2rem;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgb(0 0 0 / 0.08);
+            text-align: center;
+        }
+
+        .not-found-code {
+            display: inline-block;
+            margin-bottom: 1rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            background: rgb(231 76 60 / 0.12);
+            color: #e74c3c;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .not-found-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <main class="not-found-card">
+        <div class="not-found-code">404</div>
+        <h1 data-key="404Heading">Помилка 404</h1>
+        <p data-key="404Lead">Сторінка, яку ви шукаєте, недоступна або була переміщена.</p>
+        <p data-key="404Support">Якщо ви перейшли за посиланням із цього сайту, будь ласка, повідомте про проблему.</p>
+        <div class="not-found-actions">
+            <a class="btn btn-primary" href="index.html" data-key="backHome">Повернутися на головну</a>
+            <a class="btn btn-secondary" href="mailto:kovalenko.vadim2004@gmail.com?subject=404%20report%20for%20-histesting">Повідомити про проблему</a>
+        </div>
+    </main>
+
+    <script src="js/i18n-errors.js" defer></script>
+    <script src="js/logger.js" defer></script>
+    <script src="js/error-handler.js" defer></script>
+    <script defer>
+        window.addEventListener('DOMContentLoaded', function () {
+            var messages = window.LandingPageErrorMessages
+                ? window.LandingPageErrorMessages.getMessages(navigator.language || 'uk')
+                : null;
+
+            if (messages) {
+                document.querySelectorAll('[data-key]').forEach(function (element) {
+                    var key = element.getAttribute('data-key');
+
+                    if (key && messages[key]) {
+                        element.textContent = messages[key];
+                    }
+                });
+            }
+
+            if (window.LandingPageLogger) {
+                window.LandingPageLogger.warning('404', 'Not found page opened', {
+                    pageUrl: window.location.href
+                });
+            }
+        });
+    </script>
+</body>
+</html>

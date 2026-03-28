@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: error-handler.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: error-handler.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Global browser error handling and user-facing fallback UI.
+ */
+
+'use strict';
+
+(function bootstrapErrorHandler(globalObject) {
+    const runtimeWindow = /** @type {*} */ (globalObject);
+    const logger = runtimeWindow.LandingPageLogger;
+    const messageService = runtimeWindow.LandingPageErrorMessages;
+    const REPORT_EMAIL = 'kovalenko.vadim2004@gmail.com';
+
+    if (!logger || !messageService) {
+        return;
+    }
+
+    function createErrorId() {
+        return `ERR-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function getLocaleMessages() {
+        const language = globalObject.navigator &amp;&amp; globalObject.navigator.language
+            ? globalObject.navigator.language
+            : 'en';
+        return messageService.getMessages(language);
+    }
+
+    function getEnvironmentContext() {
+        return {
+            pageUrl: globalObject.location &amp;&amp; globalObject.location.href ? globalObject.location.href : '',
+            pageHash: globalObject.location &amp;&amp; globalObject.location.hash ? globalObject.location.hash : '',
+            userAgent: globalObject.navigator &amp;&amp; globalObject.navigator.userAgent ? globalObject.navigator.userAgent : '',
+            language: globalObject.navigator &amp;&amp; globalObject.navigator.language ? globalObject.navigator.language : '',
+            sessionId: logger.sessionId,
+            recentAction: logger.getRecentAction()
+        };
+    }
+
+    function toPlainErrorDetails(details) {
+        return JSON.stringify(details, null, 2);
+    }
+
+    function copyText(text) {
+        if (globalObject.navigator &amp;&amp; globalObject.navigator.clipboard &amp;&amp; globalObject.navigator.clipboard.writeText) {
+            return globalObject.navigator.clipboard.writeText(text);
+        }
+
+        return Promise.resolve();
+    }
+
+    function ensureUiContainer() {
+        const documentRef = globalObject.document;
+        const existingContainer = documentRef.getElementById('app-error-notifications');
+
+        if (existingContainer) {
+            return existingContainer;
+        }
+
+        const container = documentRef.createElement('section');
+        container.id = 'app-error-notifications';
+        container.className = 'app-error-notifications';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-label', 'Application error notifications');
+        documentRef.body.appendChild(container);
+        return container;
+    }
+
+    function createReportLink(errorId) {
+        const subject = encodeURIComponent(`Landing page issue report: ${errorId}`);
+        const body = encodeURIComponent([
+            `Error ID: ${errorId}`,
+            `Page: ${globalObject.location &amp;&amp; globalObject.location.href ? globalObject.location.href : ''}`,
+            '',
+            'Please describe what you were doing before the problem happened:'
+        ].join('\n'));
+
+        return `mailto:${REPORT_EMAIL}?subject=${subject}&amp;body=${body}`;
+    }
+
+    function showUserMessage(options) {
+        const documentRef = globalObject.document;
+        const messages = getLocaleMessages();
+        const container = ensureUiContainer();
+        const panel = documentRef.createElement('article');
+        const details = toPlainErrorDetails(options.details);
+        const title = options.title || messages.genericErrorTitle;
+        const message = options.message || messages.genericErrorMessage;
+
+        panel.className = 'app-error-panel';
+        panel.setAttribute('role', 'alert');
+        panel.innerHTML = `
+            &lt;h2 class="app-error-panel__title">${title}&lt;/h2>
+            &lt;p class="app-error-panel__message">${message}&lt;/p>
+            &lt;p class="app-error-panel__meta">Error ID: &lt;code>${options.errorId}&lt;/code>&lt;/p>
+            &lt;div class="app-error-panel__actions">
+                &lt;button type="button" class="app-error-panel__button" data-action="copy">${messages.copyDetails}&lt;/button>
+                &lt;a class="app-error-panel__button app-error-panel__button--link" href="${createReportLink(options.errorId)}">${messages.reportProblem}&lt;/a>
+                &lt;button type="button" class="app-error-panel__button app-error-panel__button--secondary" data-action="dismiss">${messages.dismiss}&lt;/button>
+            &lt;/div>
+        `;
+
+        const copyButton = panel.querySelector('[data-action="copy"]');
+        const dismissButton = panel.querySelector('[data-action="dismiss"]');
+
+        if (copyButton instanceof HTMLButtonElement) {
+            copyButton.addEventListener('click', () => {
+                copyText(details).then(() => {
+                    copyButton.textContent = messages.detailsCopied;
+                });
+            });
+        }
+
+        if (dismissButton instanceof HTMLButtonElement) {
+            dismissButton.addEventListener('click', () => {
+                panel.remove();
+            });
+        }
+
+        container.appendChild(panel);
+    }
+
+    function buildDetails(errorId, category, error, context, traceId) {
+        return {
+            errorId,
+            category,
+            traceId,
+            message: error &amp;&amp; error.message ? error.message : '',
+            stack: error &amp;&amp; error.stack ? error.stack : '',
+            context: {
+                ...getEnvironmentContext(),
+                ...(context || {})
+            }
+        };
+    }
+
+    /**
+     * Reports an application error, logs it, and optionally shows a user-facing message.
+     *
+     * @param {Error|undefined|null} error Native error object when available.
+     * @param {object} options Reporting options.
+     * @returns {string} Unique error identifier.
+     */
+    function reportError(error, options) {
+        const errorId = createErrorId();
+        const traceId = options &amp;&amp; options.traceId ? options.traceId : logger.startTrace('error-handler', 'error.reported');
+        const category = options &amp;&amp; options.category ? options.category : 'unexpectedError';
+        const messages = getLocaleMessages();
+        const details = buildDetails(errorId, category, error || null, options &amp;&amp; options.context ? options.context : {}, traceId);
+        const titleKey = `${category}Title`;
+        const messageKey = `${category}Message`;
+
+        logger.error('error-handler', options &amp;&amp; options.logMessage ? options.logMessage : 'Runtime error captured', details.context, {
+            traceId,
+            errorId
+        });
+
+        if (!options || options.showUserMessage !== false) {
+            showUserMessage({
+                errorId,
+                details,
+                title: messages[titleKey] || messages.genericErrorTitle,
+                message: messages[messageKey] || messages.genericErrorMessage
+            });
+        }
+
+        return errorId;
+    }
+
+    function reportActionFailure(category, context) {
+        return reportError(null, {
+            category: category || 'actionFailed',
+            context,
+            logMessage: 'User-facing action failed'
+        });
+    }
+
+    function handleResourceError(event) {
+        const target = event.target;
+
+        if (!target || target === globalObject) {
+            return;
+        }
+
+        const tagName = target.tagName ? target.tagName.toLowerCase() : 'unknown';
+        const sourceUrl = target.currentSrc || target.src || target.href || '';
+
+        reportError(null, {
+            category: 'resourceLoadError',
+            context: {
+                resourceTag: tagName,
+                resourceUrl: sourceUrl
+            },
+            logMessage: 'Static resource failed to load',
+            showUserMessage: tagName === 'img'
+        });
+    }
+
+    function handleRuntimeError(event) {
+        if (event.target &amp;&amp; event.target !== globalObject) {
+            handleResourceError(event);
+            return;
+        }
+
+        const error = event.error instanceof Error ? event.error : new Error(event.message || 'Unknown runtime error');
+        reportError(error, {
+            category: 'unexpectedError',
+            context: {
+                source: event.filename || '',
+                line: event.lineno || 0,
+                column: event.colno || 0
+            },
+            logMessage: 'Unhandled runtime exception captured'
+        });
+    }
+
+    function handleUnhandledRejection(event) {
+        const reason = event.reason instanceof Error
+            ? event.reason
+            : new Error(typeof event.reason === 'string' ? event.reason : 'Unhandled promise rejection');
+
+        reportError(reason, {
+            category: 'unexpectedError',
+            context: {
+                rejection: String(event.reason)
+            },
+            logMessage: 'Unhandled promise rejection captured'
+        });
+    }
+
+    function installGlobalHandlers() {
+        globalObject.addEventListener('error', handleRuntimeError, true);
+        globalObject.addEventListener('unhandledrejection', handleUnhandledRejection);
+        logger.info('error-handler', 'Global error handlers installed', {
+            handlers: ['error', 'unhandledrejection']
+        });
+    }
+
+    runtimeWindow.LandingPageErrorHandler = {
+        getEnvironmentContext,
+        installGlobalHandlers,
+        reportActionFailure,
+        reportError
+    };
+}(window));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a>
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
