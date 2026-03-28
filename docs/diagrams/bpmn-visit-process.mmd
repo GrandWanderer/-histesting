@@ -1,0 +1,35 @@
+flowchart LR
+    %% Simplified BPMN-oriented representation for the lab report.
+    subgraph Patient["Пацієнт"]
+        PStart([Початок])
+        PRequest[Надсилає запит на запис]
+        PConfirm[Підтверджує запропонований час]
+        PVisit[Прибуває на прийом]
+        PEnd([Візит завершено])
+    end
+
+    subgraph Administrator["Адміністратор"]
+        ACheck[Перевіряє вільні слоти]
+        ADecision{Є вільний час?}
+        AOffer[Пропонує дату і час]
+        ACreate[Створює запис на прийом]
+        ARegister[Реєструє прибуття пацієнта]
+    end
+
+    subgraph Doctor["Лікар"]
+        DConsult[Проводить консультацію\nта лікування]
+        DRecord[Оновлює медичний запис]
+    end
+
+    subgraph Cashier["Каса / Оплата"]
+        CInvoice[Формує суму до оплати]
+        CPayment{Оплату проведено?}
+        CReceive[Приймає оплату]
+        CDebt[Фіксує відкладену оплату]
+    end
+
+    PStart --> PRequest --> ACheck --> ADecision
+    ADecision -- Так --> AOffer --> PConfirm --> ACreate --> PVisit --> ARegister --> DConsult --> DRecord --> CInvoice --> CPayment
+    ADecision -- Ні --> AOffer
+    CPayment -- Так --> CReceive --> PEnd
+    CPayment -- Ні --> CDebt --> PEnd

@@ -141,6 +141,7 @@ npm run docs:archive
 |-- images/                    # Static images and icons
 |-- docs/
 |   |-- architecture.md        # Project structure and architecture
+|   |-- diagrams.md            # Diagram analysis lab report
 |   |-- deployment.md          # Production deployment guide
 |   |-- update.md              # Update and rollback process
 |   |-- backup.md              # Backup and restore procedures
@@ -207,6 +208,7 @@ Detailed instructions are available in:
 
 - `docs/architecture.md` explains the static-site architecture and components.
 - `docs/code-documentation.md` explains the frontend behavior, documented public API, and code-level architectural decisions.
+- `docs/diagrams.md` contains the diagrams lab with theory, comparisons, and practical diagram models.
 - `docs/deployment.md` provides a step-by-step production deployment guide.
 - `docs/generate_docs.md` explains how to generate, validate, and archive JSDoc output.
 - `docs/update.md` describes how to apply updates and roll back safely.

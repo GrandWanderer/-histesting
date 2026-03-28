@@ -1,0 +1,71 @@
+erDiagram
+    ROLE ||--o{ USER : assigns
+    USER ||--o{ APPOINTMENT : creates
+    PATIENT ||--o{ APPOINTMENT : books
+    DOCTOR ||--o{ APPOINTMENT : conducts
+    PATIENT ||--o{ TREATMENT_RECORD : has
+    DOCTOR ||--o{ TREATMENT_RECORD : writes
+    APPOINTMENT ||--o| PAYMENT : may_generate
+    APPOINTMENT ||--o{ TREATMENT_RECORD : results_in
+
+    ROLE {
+        int role_id PK
+        string role_name
+        string description
+    }
+
+    USER {
+        int user_id PK
+        int role_id FK
+        string login
+        string password_hash
+        string full_name
+        string status
+    }
+
+    PATIENT {
+        int patient_id PK
+        string full_name
+        date birth_date
+        string phone
+        string email
+        string insurance_note
+    }
+
+    DOCTOR {
+        int doctor_id PK
+        string full_name
+        string specialization
+        string phone
+        string room_number
+    }
+
+    APPOINTMENT {
+        int appointment_id PK
+        int patient_id FK
+        int doctor_id FK
+        int user_id FK
+        datetime appointment_at
+        string status
+        string visit_reason
+    }
+
+    TREATMENT_RECORD {
+        int record_id PK
+        int patient_id FK
+        int doctor_id FK
+        int appointment_id FK
+        date record_date
+        string diagnosis
+        string procedure_summary
+        string recommendations
+    }
+
+    PAYMENT {
+        int payment_id PK
+        int appointment_id FK
+        decimal amount
+        date payment_date
+        string payment_method
+        string payment_status
+    }
